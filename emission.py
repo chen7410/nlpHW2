@@ -2,6 +2,11 @@ from __future__ import division
 import nltk
 from nltk import word_tokenize
 
+# train a language from a give file name and return a 
+# tag dictionary and tagged token dictionary in the flowing from.
+# tag dictionary : {TAG, count}
+# tagged toekn dictionary : {word/TAG, count}
+# returns tag dictionary, tagged token dictionary.
 
 def process_file(filename):
     dict_tagged_token = {}
@@ -33,14 +38,15 @@ def process_file(filename):
 # Calculate he probability of the the given word and tag in the training model.
 # dict_tagged_token: tagged token dictionary from training data.
 # dict_tag: tag dictionary from training data.
-# return: the probability will be at least 0.1.
-def calculate_prob(dict_tag, dict_tagged_token, word, tag):
+# smooth_factor: the smooth factor.
+# return: the probability will at least be the smooth factor.
+def calculate_prob(dict_tag, dict_tagged_token, word, tag, smooth_factor):
     key = (word, tag)
     # print(key)
     if key in dict_tagged_token:
-        return (dict_tagged_token[key] / dict_tag[tag]) + 0.1
+        return (dict_tagged_token[key] / dict_tag[tag]) + smooth_factor
     else:
-        return 0.1
+        return smooth_factor
 
 # Outpput a table to a specified file name based on a specified training data.
 # dict_tagged_token: tagged token dictionary from training data.
@@ -51,15 +57,15 @@ def write_table(filename, dict_tag, dict_tagged_token):
     s2 = "VERB"
     s3 = "CONJ"
     s4 = "PRO"
-    s5 = " "
+    s0 = " "
     with open(filename, "w") as file:
-        file.write("%-20s|%20s|%20s|%20s|%20s\n" %(s5, s1, s2, s3, s4))
+        file.write("%-20s|%20s|%20s|%20s|%20s\n" %(s0, s1, s2, s3, s4))
         for key in dict_tagged_token:
             c0 = key[0]
-            c1 = calculate_prob(dict_tag, dict_tagged_token, key[0], 'N')
-            c2 = calculate_prob(dict_tag, dict_tagged_token, key[0], 'V')
-            c3 = calculate_prob(dict_tag, dict_tagged_token, key[0], 'CONJ')
-            c4 = calculate_prob(dict_tag, dict_tagged_token, key[0], 'PRO')
+            c1 = calculate_prob(dict_tag, dict_tagged_token, key[0], 'N', 0.1)
+            c2 = calculate_prob(dict_tag, dict_tagged_token, key[0], 'V', 0.1)
+            c3 = calculate_prob(dict_tag, dict_tagged_token, key[0], 'CONJ', 0.1)
+            c4 = calculate_prob(dict_tag, dict_tagged_token, key[0], 'PRO', 0.1)
             # print("TABLE = " + str(key))
             
             file.write("%-20s|%20.3f|%20.3f|%20.3f|%20.3f\n" %(c0, c1, c2, c3, c4))
