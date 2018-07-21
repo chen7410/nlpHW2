@@ -1,6 +1,8 @@
 from __future__ import division
 import nltk
 from nltk import word_tokenize
+import os
+
 
 # train a language from a give file name and return a 
 # tag dictionary and tagged token dictionary in the flowing from.
@@ -30,7 +32,7 @@ def process_file(filename):
                     dict_tag[tagged_token[1]] = 1
                 # print(str(tagged_token[1]) + " : " +str(dict_tag[tagged_token[1]])) 
 
-        print(dict_tagged_token)
+        # print(dict_tagged_token)
         # print(dict_tag) 
     file.close()
     return dict_tag, dict_tagged_token
@@ -74,8 +76,11 @@ def write_table(filename, dict_tag, dict_tagged_token):
 
 
 def main():
-    dict_tag, dict_tagged_token = process_file("./hw2_chen7410/Klingon_Train.txt")
-    write_table("./hw2_chen7410/Emission.txt", dict_tag, dict_tagged_token)
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+
+    # print(os.path.dirname(os.path.realpath(__file__)))
+    dict_tag, dict_tagged_token = process_file(current_dir + "\Klingon_Train.txt")
+    write_table(current_dir + "\Emission.txt", dict_tag, dict_tagged_token)
     # print(dict_tag['N'], dict_tag['V'], dict_tag['PRO'], dict_tag['CONJ'])
 
 
