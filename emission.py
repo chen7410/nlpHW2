@@ -54,7 +54,6 @@ def calculate_prob(dict_tag, dict_tagged_token, word, tag, smooth_factor):
 # dict_tagged_token: tagged token dictionary from training data.
 # dict_tag: tag dictionary from training data.
 def write_table(filename, dict_tag, dict_tagged_token):
-    dict_tag, dict_tagged_token = process_file("./hw2_chen7410/Klingon_Train.txt")
     s1 = "NOUN"
     s2 = "VERB"
     s3 = "CONJ"
@@ -79,8 +78,8 @@ def main():
     current_dir = os.path.dirname(os.path.realpath(__file__))
 
     # print(os.path.dirname(os.path.realpath(__file__)))
-    dict_tag, dict_tagged_token = process_file(current_dir + "\Klingon_Train.txt")
-    write_table(current_dir + "\Emission.txt", dict_tag, dict_tagged_token)
+    dict_tag, dict_tagged_token = process_file(current_dir + "/Klingon_Train.txt")
+    write_table(current_dir + "/Emission.txt", dict_tag, dict_tagged_token)
     # print(dict_tag['N'], dict_tag['V'], dict_tag['PRO'], dict_tag['CONJ'])
 
 
