@@ -24,16 +24,12 @@ def process_file(filename):
                     dict_tagged_token[tagged_token] += 1
                 else:
                     dict_tagged_token[tagged_token] = 1
-                # print(str(tagged_token) + " : " + str(dict_tagged_token.get(tagged_token)))
                 # TAG
                 if tagged_token[1] in dict_tag:
                     dict_tag[tagged_token[1]] += 1
                 else:
                     dict_tag[tagged_token[1]] = 1
-                # print(str(tagged_token[1]) + " : " +str(dict_tag[tagged_token[1]])) 
 
-        # print(dict_tagged_token)
-        # print(dict_tag) 
     file.close()
     return dict_tag, dict_tagged_token
     
@@ -67,7 +63,6 @@ def write_table(filename, dict_tag, dict_tagged_token):
             c2 = calculate_prob(dict_tag, dict_tagged_token, key[0], 'V', 0.1)
             c3 = calculate_prob(dict_tag, dict_tagged_token, key[0], 'CONJ', 0.1)
             c4 = calculate_prob(dict_tag, dict_tagged_token, key[0], 'PRO', 0.1)
-            # print("TABLE = " + str(key))
             
             file.write("%-20s|%20.3f|%20.3f|%20.3f|%20.3f\n" %(c0, c1, c2, c3, c4))
 
@@ -77,10 +72,8 @@ def write_table(filename, dict_tag, dict_tagged_token):
 def main():
     current_dir = os.path.dirname(os.path.realpath(__file__))
 
-    # print(os.path.dirname(os.path.realpath(__file__)))
     dict_tag, dict_tagged_token = process_file(current_dir + "/Klingon_Train.txt")
     write_table(current_dir + "/Emission.txt", dict_tag, dict_tagged_token)
-    # print(dict_tag['N'], dict_tag['V'], dict_tag['PRO'], dict_tag['CONJ'])
 
 
 main()

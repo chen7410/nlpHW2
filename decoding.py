@@ -228,10 +228,4 @@ def main():
     result = decode(dict_emission, dict_transition, dict_tag_emssion, test_sentence, 0.1)
     write_result(current_dir + "/" + output_file, result)
 
-
-
-
-
-
-
 main()

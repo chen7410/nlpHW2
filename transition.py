@@ -21,7 +21,6 @@ def process_file(filename):
                 tagged_token = nltk.tag.str2tuple(token)
                 list_tag.append(tagged_token[1])
             list_tag.append("</s>")
-            print(list_tag)
 
             for tag in list_tag:
                 if tag in dict_tag:
@@ -65,8 +64,6 @@ def write_table(filename, dict_tag, dict_bigram_tag):
     s4 = "PRO"
     s5 = "</s>"
     s0 = " "
-    print(dict_bigram_tag)
-    print(dict_tag)
     with open(filename, "w") as file:
         file.write("%-7s|%20s|%20s|%20s|%20s|%20s\n" %(s0, s1, s2, s3, s4, s5))
         for tag in dict_tag:
