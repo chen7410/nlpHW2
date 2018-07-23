@@ -22,16 +22,12 @@ def get_emission_data(filename):
                     dict_tagged_token[tagged_token] += 1
                 else:
                     dict_tagged_token[tagged_token] = 1
-                # print(str(tagged_token) + " : " + str(dict_tagged_token.get(tagged_token)))
                 # TAG
                 if tagged_token[1] in dict_tag:
                     dict_tag[tagged_token[1]] += 1
                 else:
                     dict_tag[tagged_token[1]] = 1
-                # print(str(tagged_token[1]) + " : " +str(dict_tag[tagged_token[1]])) 
 
-        # print(dict_tagged_token)
-        # print(dict_tag) 
     file.close()
     return dict_tag, dict_tagged_token
 
@@ -54,7 +50,6 @@ def get_transition_data(filename):
                 tagged_token = nltk.tag.str2tuple(token)
                 list_tag.append(tagged_token[1])
             list_tag.append("</s>")
-            # print(list_tag)
 
             for tag in list_tag:
                 if tag in dict_tag:
@@ -69,9 +64,7 @@ def get_transition_data(filename):
                     dict_bigram_tag[bigram] += 1
                 else:
                     dict_bigram_tag[bigram] = 1
-            
-        # print(list_bigram_tag)
-        # print(str(dict_tag) + "\n" + str(dict_bigram_tag))
+
     file.close()
     return dict_tag, dict_bigram_tag
 
@@ -83,7 +76,6 @@ def get_transition_data(filename):
 # return: the probability will at least be the smooth factor.
 def calculate_emission_prob(dict_tag, dict_tagged_token, word, tag, smooth_factor):
     key = (word, tag)
-    # print(key)
     if key in dict_tagged_token:
         return (dict_tagged_token[key] / dict_tag[tag]) + smooth_factor
     else:
@@ -109,23 +101,16 @@ def calculate_transition_prob(dict_tag, dict_bigram_tag, tag1, tag2, smooth_fact
 # emission dictionary : {(word, TAG), probility}
 # return: emission dictionary
 def get_emission_dict(dict_tag, dict_tagged_token, smooth_factor):
-    print("----------------------------Emission______________________________")
     list_tag = list(dict_tag.keys())
-    # print(end="          ")
-    # for tag in list_tag:
-    #     print(tag, end="          ")
-    # print("\n")
 
     dict_emission = {}
     for key in dict_tagged_token:
         c0 = key[0]
         for tag in list_tag:
             prob = calculate_emission_prob(dict_tag, dict_tagged_token, key[0], tag, smooth_factor)
-            # print(prob, end="          ")
             emission_key = (c0, tag)
             dict_emission[emission_key] = prob
-        # print("\n")
-    print(dict_emission)
+
     return dict_emission
 
 # calculate the transition probility of the specified tag dictionary and bigram tag dictionary
@@ -134,90 +119,114 @@ def get_emission_dict(dict_tag, dict_tagged_token, smooth_factor):
 # transition dictionary : {(TAG1, TAG2), probility}
 # return: transition dictionary
 def get_transition_dict(dict_tag, dict_bigram_tag, smooth_factor):
-    print("----------------------------Transition______________________________")
     dict_transition = {}
     for tag_i in dict_tag:
         for tag_j in dict_tag:
             transition_key = (tag_i, tag_j)
             prob = calculate_transition_prob(dict_tag, dict_bigram_tag, tag_i, tag_j, smooth_factor)
             dict_transition[transition_key] = prob
-    print(dict_transition)
     return dict_transition
 
 
-# Let T = # of part-of-speech tags
-#       W = # of words in the sentence
-# /* Initialization Step */
-# for t = 1 to T
-#        Score(t, 1) = Pr(Word1| Tagt) * Pr(Tagt| φ)
-#        BackPtr(t, 1) = 0;
-# /* Iteration Step */
-# for w = 2 to W
-#     for t = 1 to T
-#         Score(t, w) = Pr(Wordw| Tagt) *MAXj=1,T(Score(j, w-1) * Pr(Tagt| Tagj))    
-#         BackPtr(t, w) = index of j that gave the max above
-# /* Sequence Identification */
-# Seq(W ) = t that maximizes Score(t,W ) 
-# for w = W -1 to 1
-#     Seq(w) = BackPtr(Seq(w+1),w+1)
-def decode(dict_emission, dict_transition, dict_tag_emssion, test_sentence):
-    print("----------------------------Decode______________________________")
+# use Viterbi algorithm to generate the POS tags for the test sentence.
+# dict_emission : emission dictionary {(word, TAG), probility}
+# dict_transition : transition dictionary {(TAG1, TAG2), probility}
+# dict_tag_emssion : tag dictionary that has all tags in emission dictionary
+# return a tagged sentence as a list
+def decode(dict_emission, dict_transition, dict_tag_emssion, test_sentence, smooth_factor):
     list_sent = test_sentence.split()
     list_tag = list(dict_tag_emssion.keys())
 
     # initialize table
-    table = []
-    for i in range(len(list_tag)):
-        table.append([])
-
-    # calculate first column    
+    table = {}
+    pointer = {}
     word  = list_sent[0]
-    j = 0
+    col_index = 0
     for tag in list_tag:
         es_key = (word, tag)
-        print("es_key = " + str(es_key))
-        es_prob = dict_emission.get(es_key, 0)
+        es_prob = dict_emission.get(es_key, smooth_factor)
         ts_key = ('<s>', tag)
-        ts_prob = dict_transition.get(ts_key, 0)
+        ts_prob = dict_transition.get(ts_key, smooth_factor)
 
         vb_prob = es_prob * ts_prob
-        table[j].append(vb_prob)
-        j += 1
-    print(table)
+        table[(0, tag)] = vb_prob
+        pointer[(0, tag)] = "0"
+    col_index += 1
     # end table initialization
 
     # iterate the table
-    # for i = 1 in range(len(list_sent)):
-    #     for tag in list_tag:
-    #         es_key = (list_sent[i], tag)
-    #         es_prob = dict_emission.get(es_key, 0)
+    for i in range(1, len(list_sent)):
+        list_last_probs = [0] * len(list_tag)
+        for j in range(0, len(list_tag)):
+            word = list_sent[i]
+            max_prob = 0
+            back_pointer = ""
+            
+            for k in range(0, len(list_tag)):
+                es_key = (word, list_tag[j])
+                es_prob = dict_emission.get(es_key, smooth_factor)
+                ts_key = (list_tag[k], list_tag[j])
+                ts_prob = dict_transition.get(ts_key, smooth_factor)
 
-    #         for tag in list_tag:
+                prev_prob = table[i - 1, list_tag[k]]
+                tag_prob = es_prob * ts_prob * prev_prob
+                # find max probability
+                if tag_prob > max_prob:
+                    max_prob = tag_prob
+                    back_pointer = list_tag[k]
+
+            # save the max probability to the table
+            prob = max_prob
+            pointer[col_index, list_tag[j]] = back_pointer
+            table[col_index, list_tag[j]] = prob
+            
+            #store the probability of the last column
+            list_last_probs[j] = prob
+    
+        col_index += 1
+        
+        # find the last back_pointer
+        m = max(list_last_probs)
+        m_index = 0
+        for i in range(0, len(list_last_probs)):
+            if m is list_last_probs[i]:
+                m_index = i
+
+    # # Sequence identification
+    x = len(list_sent) - 1
+    result = []
+    last_pointer = list_tag[m_index]
+    while x > -1:
+        tag = pointer[(x, last_pointer)]
+        tagged_token = (str(list_sent[x]) + "/" + str(last_pointer))
+        last_pointer = tag
+        x -= 1
+        result.append(tagged_token)    
+
+    result = list(reversed(result))
+    return result
 
 
-
-
-
-
-    # return table
-
-
+def write_result(filename, tagged_sentence):
+    with open(filename, 'w') as file:
+        for word in tagged_sentence:
+            file.write("%s " % word)
 
 
 def main():
-    print("----------------------------start______________________________")
     current_dir = os.path.dirname(os.path.realpath(__file__))
-    filename = "Klingon_Train.txt"
+    training_file = "Klingon_Train.txt"
 
-    dict_tag_emssion, dict_tagged_token_emssion = get_emission_data(current_dir + "/" + filename)
+    dict_tag_emssion, dict_tagged_token_emssion = get_emission_data(current_dir + "/" + training_file)
     dict_emission = get_emission_dict(dict_tag_emssion, dict_tagged_token_emssion, 0.1)
 
-    dict_tag_transition, dict_bigram_tag_transition = get_transition_data(current_dir + "/" + filename)
+    dict_tag_transition, dict_bigram_tag_transition = get_transition_data(current_dir + "/" + training_file)
     dict_transition = get_transition_dict(dict_tag_transition, dict_bigram_tag_transition, 0.1)
 
     test_sentence = "tera`ngan legh yaS"
-
-    decode(dict_emission, dict_transition, dict_tag_emssion, test_sentence)
+    output_file = "Tagged_sentence.txt"
+    result = decode(dict_emission, dict_transition, dict_tag_emssion, test_sentence, 0.1)
+    write_result(current_dir + "/" + output_file, result)
 
 
 
